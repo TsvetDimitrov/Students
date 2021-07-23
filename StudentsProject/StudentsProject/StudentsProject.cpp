@@ -8,6 +8,8 @@
 #include <sstream>
 #include <list>
 #include <algorithm>
+#include <mysql.h>
+
 
 class Student {
 private:
@@ -94,14 +96,19 @@ void readAllStudentsFromFile();
 void sortStudentsbyFacNum();
 void sortStudentsByAvGrade();
 void getStudentByFacultyNum();
+void showFromDatabase();
+void addStudentsToDatabase(std::string studentName, int studentFacNum, std::vector<int> studentGrades, int stAvGrade);
 
 //List for dynamicly saving students info:
 std::vector<Student> students;
 bool sortedByFacNum = false;
+
+MYSQL* conn;
+int qstate; //variable for mysql variable in showFromDatabase function.
+
+
 int main()
 {	
-	// it doesn't work if i declare it here.
-	//std::list<Student> students;
 	std::cout << std::endl << "Make a choice:" << std::endl;
 	std::cout << "Enter 1 - Add a student." << std::endl;
 	std::cout << "Enter 2 - Add grades to a student." << std::endl;
@@ -111,8 +118,9 @@ int main()
 	std::cout << "Enter 6 - Sort students by faculty number." << std::endl;
 	std::cout << "Enter 7 - Sort students by average grade." << std::endl;
 	std::cout << "Enter 8 - Get student by faculty number." << std::endl;
-	std::cout << "Enter 9 - Clear the console." << std::endl;
-	std::cout << "Enter 10 to exit" << std::endl;
+	std::cout << "Enter 9 - Show all students from database." << std::endl;
+	std::cout << "Enter 10 - Clear the console." << std::endl;
+	std::cout << "Enter 11 to exit" << std::endl;
 	int choice;
 	std::cin >> choice;
 	switch (choice) {
@@ -149,11 +157,14 @@ int main()
 		break;
 	}
 	case 9: {
-		Clear();
-		main();
-
+		showFromDatabase();
+		break;
 	}
 	case 10: {
+		Clear();
+		main();
+	}
+	case 11: {
 		exit(0);
 		break;
 	}
@@ -208,10 +219,6 @@ void addStudent() {
 
 		studentGrades.push_back(grade);
 	}
-	//std::cout << "All student grades are: " << std::endl;
-	//for (auto i = studentGrades.begin(); i != studentGrades.end(); ++i) {
-	//	std::cout << *i << " ";
-	//}
 
 	Student student(studentName, studentFacNum, studentGrades);
 	students.push_back(student);
@@ -224,6 +231,10 @@ void addStudent() {
 		stdnt.showGrades();
 		std::cout << std::endl;
 	}
+	int stAvGrade = student.AverageGrade();
+
+	addStudentsToDatabase(studentName, studentFacNum, studentGrades, stAvGrade);
+
 }
 
 void addGrades() {
@@ -284,16 +295,6 @@ void addGrades() {
 	else {
 		std::cout << "Grades added sucessfully!" << std::endl;
 	}
-
-	//for (Student stdnt : students) {
-	//	std::cout << stdnt.getName() << ", " << stdnt.getId() << std::endl;
-	//	std::cout << "Grades: ";
-	//	stdnt.showGrades();
-	//	std::cout << std::endl;
-	//}
-
-	//main();
-
 }
 
 void printAllStudents() {
@@ -303,12 +304,12 @@ void printAllStudents() {
 		main();
 	}
 
-
 	for (Student stdnt : students) {
 		std::cout << stdnt.getName() << ", " << stdnt.getId() << std::endl;
 		std::cout << "Grades: ";
 		stdnt.showGrades();
 		std::cout << std::endl;
+		stdnt.AverageGrade();
 	}
 }
 
@@ -352,7 +353,6 @@ void readAllStudentsFromFile() {
 	}
 	std::vector<Student> studentes;
 
-
 	std::string studentId;
 	std::string studentName;
 	std::string ignored;
@@ -361,13 +361,9 @@ void readAllStudentsFromFile() {
 	std::vector<int> grades;
 	std::string s;
 
-
-
-
 	while (infile >> ignored >> studentId >> ignored >> studentName >> ignored >> ignored >> averageGrade >> ignored >> ignored >> stringGrades) {
 		std::cout << "StudentID: " << studentId << " Name: " << studentName << " Average Grade: " << averageGrade <<
 			" All grades: " << stringGrades << std::endl;
-
 	}
 }
 
@@ -441,9 +437,7 @@ void getStudentByFacultyNum() {
 			else {
 				stdnt.printAllInfo();
 				std::cout << "Student printed successfully!" << std::endl;
-
 			}
-
 		}
 		else {
 			std::cout << "Student with such faculty number doesn't exist." << std::endl;
@@ -451,6 +445,65 @@ void getStudentByFacultyNum() {
 			goto jump;
 		}
 	}
+}
 
 
+
+void showFromDatabase() {
+	
+	MYSQL_ROW row;
+	MYSQL_RES* res;
+	conn = mysql_init(0);
+
+	conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
+
+	if (conn) {
+		puts("Successfull connection to database!");
+
+		std::string query = "SELECT * FROM test";
+		const char* q = query.c_str();
+		qstate = mysql_query(conn, q);
+		if (!qstate) {
+			res = mysql_store_result(conn);
+			while (row = mysql_fetch_row(res)) {
+				printf("ID: %s, Name: %s, Average Grade: %s, Grades: %s\n", row[0], row[1], row[2], row[3]);
+			}
+		}
+		else {
+			std::cout << "Query failed:" << mysql_error(conn) << std::endl;
+		}
+	}
+	else {
+		puts("Connection to database failed!");
+	}
+}
+
+void addStudentsToDatabase(std::string studentName, int studentFacNum, std::vector<int> studentGrades, int stAvGrade){
+	//MYSQL_ROW row;
+	//MYSQL_RES* res;
+	conn = mysql_init(0);
+
+	conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
+
+
+	system("cls");
+	std::stringstream ss;
+	for (size_t i = 0; i < studentGrades.size(); ++i)
+	{
+		if (i != 0)
+			ss << ", ";
+		ss << studentGrades[i];
+	}
+	std::string gradesString = ss.str();
+	std::string insertQuery = "INSERT INTO test (id, name, averageGrade, grades) VALUES (" + std::to_string(studentFacNum) + ", '" + studentName + "', " + std::to_string(stAvGrade) + ", '" + gradesString + "')";
+
+	const char* q = insertQuery.c_str();
+
+	qstate = mysql_query(conn, q);
+
+	if (!qstate) {
+		std::cout << "Saved to database success!" <<std::endl;
+	}else{
+		std::cout << "Querry exec problem!" << mysql_errno(conn) << std::endl;
+	}
 }
