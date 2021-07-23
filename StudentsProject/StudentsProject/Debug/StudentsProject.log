@@ -1,4 +1,0 @@
-﻿  StudentsProject.cpp
-C:\Users\TsvetomirD\source\repos\StudentsProject\StudentsProject\StudentsProject.cpp(369,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\TsvetomirD\source\repos\StudentsProject\StudentsProject\StudentsProject.cpp(371,25): warning C4018: '<': signed/unsigned mismatch
-  StudentsProject.vcxproj -> C:\Users\TsvetomirD\source\repos\StudentsProject\Debug\StudentsProject.exe
