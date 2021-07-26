@@ -100,6 +100,7 @@ void showFromDatabase();
 void addStudentsToDatabase(std::string studentName, int studentFacNum, std::vector<int> studentGrades, int stAvGrade);
 void addGradeToStudentDatabase(int neededFacNumber, std::vector<std::string> grades);
 int checkForExistingFac(int studentFacNum);
+void dropAllStudents();
 
 //Vector for dynamicly saving students info:
 std::vector<Student> students;
@@ -172,6 +173,10 @@ int main()
 		exit(0);
 		break;
 	}
+	case 66: {
+		//This is order 66 it deletes all students from the database.
+		dropAllStudents();
+	}
 	default: {
 		std::cout << "Enter correct number!" << std::endl;
 	}
@@ -207,14 +212,23 @@ void addStudent() {
 
 	}
 	std::string gradesCount;
+	jump3:
 	std::cout << "Enter number of grades:" << std::endl;
 	std::cin >> gradesCount;
 
+
+	for (char const& c : gradesCount) {
+		if (std::isdigit(c) == 0) {
+			std::cout << "The entered input should be a number!" << std::endl;
+			goto jump3;
+		}
+	}
 	//For parsing string to int.
+	int gradesCountNumber;
 	std::stringstream ss;
 	ss << gradesCount;
-	int gradesCountNumber;
 	ss >> gradesCountNumber;
+
 
 	std::vector<int> studentGrades;
 	std::cout << "Enter all " << gradesCountNumber << " current student grades:" << std::endl;
@@ -558,4 +572,15 @@ int checkForExistingFac(int studentFacNum) {
 			return 0;
 		}
 	}
+}
+
+//This is hidden from the user function. He should be not able to use it, because it deletes all rows in the test table. 
+void dropAllStudents() {
+	conn = mysql_init(0);
+	conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
+	std::string Query = "DELETE FROM test";
+
+	const char* q = Query.c_str();
+
+	qstate = mysql_query(conn, q);
 }
