@@ -1,3 +1,4 @@
+#define NOMINMAX //using in validation grades. 
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,6 +10,7 @@
 #include <list>
 #include <algorithm>
 #include <mysql.h>
+#include <windows.h>
 
 
 class Student {
@@ -176,6 +178,7 @@ int main()
 	case 66: {
 		//This is order 66 it deletes all students from the database.
 		dropAllStudents();
+		break;
 	}
 	default: {
 		std::cout << "Enter correct number!" << std::endl;
@@ -195,8 +198,16 @@ void Clear()
 
 void addStudent() {
 	std::string studentName;
+	jump4:
 	std::cout << "Enter student name:" << std::endl;
 	std::cin >> studentName;
+
+	for (int i = 0; i < studentName.length(); i++) {
+		if (!isalpha(studentName[i])) {
+			std::cout << "The name must include only alphabet characters!" << std::endl;
+			goto jump4;
+		}
+	}
 
 	int studentFacNum;
 	jump:
@@ -229,6 +240,10 @@ void addStudent() {
 	std::stringstream ss;
 	ss << gradesCount;
 	ss >> gradesCountNumber;
+	if (gradesCountNumber <= 0) {
+		std::cout << "The entered input should be a number bigger than 0!" << std::endl;
+		goto jump3;
+	}
 
 
 	std::vector<int> studentGrades;
@@ -239,11 +254,13 @@ void addStudent() {
 		std::cout << "Enter grade " << i << " to continue." << std::endl;
 		
 		std::cin >> grade;
-		if (grade < 2 || grade > 6) {
+		if (grade < 2 || grade > 6 || std::cin.fail()) { 
 			std::cout << "The grade must be a number between 2 - 6!" << std::endl;
-
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			goto jump2;
 		}
+
 
 		studentGrades.push_back(grade);
 	}
@@ -518,7 +535,6 @@ void addStudentsToDatabase(std::string studentName, int studentFacNum, std::vect
 	conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
 
 
-	//system("cls");
 	std::stringstream ss;
 	for (size_t i = 0; i < studentGrades.size(); ++i)
 	{
@@ -544,11 +560,21 @@ void addStudentsToDatabase(std::string studentName, int studentFacNum, std::vect
 void addGradeToStudentDatabase(int neededFacNumber, std::vector<std::string> grades) {
 	conn = mysql_init(0);
 
-	//conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
-	//std::string insertQuery = "UPDATE test SET grades = CONCAT(grades, '" + std::to_string(neededFacNumber) + "') Where" + std::to_string(neededFacNumber);
+	conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
 
-	//const char* q = insertQuery.c_str();
-	//qstate = mysql_query(conn, q);
+	std::string result;
+
+	for (int i = 0; i < grades.size(); ++i) {
+		result += grades[i];
+		if (i + 1 != grades.size()) { // if the next iteration isn't the last
+			result += ", "; // add a comma (optional)
+		}
+	}
+	std::cout << result << std::endl;
+	std::string insertQuery = "UPDATE test SET grades = CONCAT(grades, ', ', '" + result + "') Where id = " + std::to_string(neededFacNumber) + ";";
+
+	const char* q = insertQuery.c_str();
+	qstate = mysql_query(conn, q);
 
 
 }
@@ -584,4 +610,6 @@ void dropAllStudents() {
 	const char* q = Query.c_str();
 
 	qstate = mysql_query(conn, q);
+
+	std::cout << "All database rows have been deleted." << std::endl;
 }
