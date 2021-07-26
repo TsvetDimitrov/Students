@@ -1,3 +1,5 @@
 StudentID: 20 Name: Tsvetomir Average Grade: 5 All grades: |5||5||6||5|
-StudentID: 11 Name: Tsvet Average Grade: 3 All grades: |3||3|
 StudentID: 11 Name: Tsvetomir Average Grade: 5 All grades: |6||6||5||5||5|
+StudentID: 24 Name: Petar Average Grade: 5 All grades: |5||5||6||6|
+StudentID: 1 Name: Tsvetomir Average Grade: 5 All grades: |5||6||6||6|
+StudentID: 2 Name: Konstantin Average Grade: 3 All grades: |4||2|
