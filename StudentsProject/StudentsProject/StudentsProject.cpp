@@ -216,13 +216,14 @@ void addStudent() {
 	std::cout << "Enter number of grades:" << std::endl;
 	std::cin >> gradesCount;
 
-
+	//check for invalid input:
 	for (char const& c : gradesCount) {
 		if (std::isdigit(c) == 0) {
 			std::cout << "The entered input should be a number!" << std::endl;
 			goto jump3;
 		}
 	}
+
 	//For parsing string to int.
 	int gradesCountNumber;
 	std::stringstream ss;
