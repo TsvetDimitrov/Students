@@ -182,6 +182,8 @@ int main()
 	}
 	default: {
 		std::cout << "Enter correct number!" << std::endl;
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	}
 	}
 	main();
