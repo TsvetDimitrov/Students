@@ -98,19 +98,23 @@ void sortStudentsByAvGrade();
 void getStudentByFacultyNum();
 void showFromDatabase();
 void addStudentsToDatabase(std::string studentName, int studentFacNum, std::vector<int> studentGrades, int stAvGrade);
+void addGradeToStudentDatabase(int neededFacNumber, std::vector<std::string> grades);
+int checkForExistingFac(int studentFacNum);
 
-//List for dynamicly saving students info:
+//Vector for dynamicly saving students info:
 std::vector<Student> students;
 bool sortedByFacNum = false;
 
 MYSQL* conn;
-int qstate; //variable for mysql variable in showFromDatabase function.
+MYSQL_RES* Result;
+long RowsReturned;
+int qstate; //variable for mysql
 
 
 int main()
 {	
 	std::cout << std::endl << "Make a choice:" << std::endl;
-	std::cout << "Enter 1 - Add a student." << std::endl;
+	std::cout << "Enter 1 - Add a student and save in database." << std::endl;
 	std::cout << "Enter 2 - Add grades to a student." << std::endl;
 	std::cout << "Enter 3 - Get all students info." << std::endl;
 	std::cout << "Enter 4 - Save all current students to file." << std::endl;
@@ -190,9 +194,18 @@ void addStudent() {
 	std::cin >> studentName;
 
 	int studentFacNum;
+	jump:
 	std::cout << "Enter student faculty number:" << std::endl;
 	std::cin >> studentFacNum;
 
+	int existingFac = 0;
+	existingFac = checkForExistingFac(studentFacNum);
+
+	if (existingFac) {
+		std::cout << "There is a student with this faculty number! Please try again!" << std::endl;
+		goto jump;
+
+	}
 	std::string gradesCount;
 	std::cout << "Enter number of grades:" << std::endl;
 	std::cin >> gradesCount;
@@ -238,10 +251,10 @@ void addStudent() {
 }
 
 void addGrades() {
-	if (students.size() == 0) {
-		std::cout << "No students added yet!" << std::endl;
-		main();
-	}
+	//if (students.size() == 0) {
+	//	std::cout << "No students added yet!" << std::endl;
+	//	main();
+	//}
 
 	int neededFacNumber;
 	jump:
@@ -250,6 +263,7 @@ void addGrades() {
 
 	int gradesCount;
 	bool foundStudent = false;
+	std::vector<std::string> grades;
 	for (Student stdnt : students) {
 		if (stdnt.getId() == neededFacNumber) {
 			foundStudent = true;
@@ -266,6 +280,8 @@ void addGrades() {
 				std::cout << "Enter grade " << i << " to continue." << std::endl;
 				std::cin >> grade;
 				stdnt.addNewGrade(grade);
+				std::string gradeToStr = std::to_string(grade);
+				grades.push_back(gradeToStr);
 
 				bool isFound = false;
 				std::vector <Student>::iterator it3;
@@ -282,6 +298,9 @@ void addGrades() {
 			}
 			//break;
 		}
+
+
+		addGradeToStudentDatabase(neededFacNumber, grades);
 	}
 
 	if (!foundStudent) {
@@ -484,7 +503,7 @@ void addStudentsToDatabase(std::string studentName, int studentFacNum, std::vect
 	conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
 
 
-	system("cls");
+	//system("cls");
 	std::stringstream ss;
 	for (size_t i = 0; i < studentGrades.size(); ++i)
 	{
@@ -503,5 +522,40 @@ void addStudentsToDatabase(std::string studentName, int studentFacNum, std::vect
 		std::cout << "Saved to database success!" <<std::endl;
 	}else{
 		std::cout << "Querry exec problem!" << mysql_errno(conn) << std::endl;
+	}
+}
+
+
+void addGradeToStudentDatabase(int neededFacNumber, std::vector<std::string> grades) {
+	conn = mysql_init(0);
+
+	//conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
+	//std::string insertQuery = "UPDATE test SET grades = CONCAT(grades, '" + std::to_string(neededFacNumber) + "') Where" + std::to_string(neededFacNumber);
+
+	//const char* q = insertQuery.c_str();
+	//qstate = mysql_query(conn, q);
+
+
+}
+
+int checkForExistingFac(int studentFacNum) {
+	conn = mysql_init(0);
+	conn = mysql_real_connect(conn, "localhost", "root", "password", "testdb", 3306, NULL, 0);
+	std::string Query = "SELECT id from test WHERE id = '" + std::to_string(studentFacNum) + "'";
+
+	const char* q = Query.c_str();
+
+	qstate = mysql_query(conn, q);
+
+	Result = mysql_store_result(conn);
+	if (Result) {
+		//rowsReturned shows the current found rows.
+		RowsReturned = mysql_num_rows(Result);
+		if (RowsReturned > 0) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
 	}
 }
