@@ -518,9 +518,16 @@ void showFromDatabase() {
 		qstate = mysql_query(conn, q);
 		if (!qstate) {
 			res = mysql_store_result(conn);
-			while (row = mysql_fetch_row(res)) {
-				printf("ID: %s, Name: %s, Average Grade: %s, Grades: %s\n", row[0], row[1], row[2], row[3]);
-			}
+				printf("----------------------------------------------------------------------------------\n");
+				printf("|				List All Students		                  |\n");
+				printf("----------------------------------------------------------------------------------\n");
+				printf("| %-5s | %-10s | %-25s | %-30s |\n", "ID", "Name", "Average Grade", "Grades");
+				while (row = mysql_fetch_row(res)) {
+					printf("| %-5s | %-10s | %-25s | %-30s |\n", row[0], row[1], row[2], row[3]);
+				//printf("ID: %s, Name: %s, Average Grade: %s, Grades: %s\n", row[0], row[1], row[2], row[3]); // or simply just use this.
+				}
+				printf("-----------------------------------------------------------------------------------\n");
+
 		}
 		else {
 			std::cout << "Query failed:" << mysql_error(conn) << std::endl;
